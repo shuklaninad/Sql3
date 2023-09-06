@@ -1,0 +1,45 @@
+## Problem 1 : Consecutive Numbers (https://leetcode.com/problems/consecutive-numbers/)
+
+WITH CTE AS (
+    SELECT num,
+    lead(num, 1) OVER() num1,
+    lead(num, 2) OVER() num2
+    FROM logs
+) SELECT DISTINCT num AS ConsecutiveNums FROM CTE WHERE (num=num1) AND (num=num2);
+
+
+## Problem 2 :Number of Passengers in Each Bus ( https://leetcode.com/problems/the-number-of-passengers-in-each-bus-i/ )
+
+WITH CTE AS(
+    SELECT p.passenger_id, MIN(b.arrival_time) AS arrival_time 
+    FROM Passengers p LEFT JOIN buses b ON p.arrival_time <= b.arrival_time GROUP BY p.passenger_id
+)
+
+SELECT b.bus_id, COUNT(CTE.arrival_time) AS passengers_cnt 
+FROM buses b LEFT JOIN CTE ON b.arrival_time = CTE.arrival_time GROUP BY b.bus_id ORDER BY b.bus_id;
+
+
+## Problem 3 :User Activity (https://leetcode.com/problems/user-activity-for-the-past-30-days-i/ )
+
+SELECT activity_date AS day, COUNT(DISTINCT user_id) AS active_users
+FROM Activity 
+WHERE activity_date BETWEEN DATE_SUB('2019-07-27', INTERVAL 29 DAY) AND '2019-07-27' GROUP bY 1;
+
+
+## Problem 4 :Dynamic Pivoting of a Table ( https://leetcode.com/problems/dynamic-pivoting-of-a-table/ )
+
+CREATE PROCEDURE PivotProducts()
+BEGIN
+	
+    SET SESSION GROUP_CONCAT_MAX_LEN = 1000000;
+    SET @sql = null;
+    SELECT GROUP_CONCAT(DISTINCT CONCAT(
+        ' SUM(IF(store = "', store, '", price, null)) AS ', store
+    ))
+    INTO @sql FROM products;
+    SET @sql = CONCAT('SELECT product_id, ' , @sql , ' FROM products GROUP BY 1');
+
+    PREPARE statement FROM @sql;
+    EXECUTE statement;
+    DEALLOCATE PREPARE statement;	
+END
